@@ -1,7 +1,50 @@
 <template>
+    <!-- Search and Filter Bar -->
+    <div v-if="!editMode" class="search-filter-bar mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <font-awesome-icon icon="search" />
+                    </span>
+                    <input 
+                        v-model="searchQuery" 
+                        type="text" 
+                        class="form-control" 
+                        :placeholder="$t('Search monitors...')"
+                        @input="filterMonitors"
+                    />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select v-model="statusFilter" class="form-select" @change="filterMonitors">
+                    <option value="all">{{ $t("All Status") }}</option>
+                    <option value="up">{{ $t("Up") }}</option>
+                    <option value="down">{{ $t("Down") }}</option>
+                    <option value="maintenance">{{ $t("Maintenance") }}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button 
+                    v-if="hasActiveFilters" 
+                    class="btn btn-outline-secondary w-100" 
+                    @click="clearFilters"
+                >
+                    <font-awesome-icon icon="times" />
+                    {{ $t("Clear Filters") }}
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results counter -->
+        <div v-if="hasActiveFilters" class="mt-2 text-muted small">
+            {{ $t("Showing") }} {{ filteredMonitorCount }} {{ $t("of") }} {{ totalMonitorCount }} {{ $t("monitors") }}
+        </div>
+    </div>
+
     <!-- Group List -->
     <Draggable
-        v-model="$root.publicGroupList"
+        v-model="filteredGroupList"
         :disabled="!editMode"
         item-key="id"
         :animation="100"
@@ -118,18 +161,108 @@ export default {
     },
     data() {
         return {
-
+            searchQuery: "",
+            statusFilter: "all",
+            originalGroupList: [],
         };
     },
     computed: {
         showGroupDrag() {
             return (this.$root.publicGroupList.length >= 2);
+        },
+        
+        hasActiveFilters() {
+            return this.searchQuery.trim() !== "" || this.statusFilter !== "all";
+        },
+        
+        filteredGroupList: {
+            get() {
+                if (!this.hasActiveFilters) {
+                    return this.$root.publicGroupList;
+                }
+                
+                return this.$root.publicGroupList.map(group => {
+                    const filteredMonitors = group.monitorList.filter(monitor => {
+                        return this.matchesSearch(monitor) && this.matchesStatusFilter(monitor);
+                    });
+                    
+                    return {
+                        ...group,
+                        monitorList: filteredMonitors
+                    };
+                }).filter(group => group.monitorList.length > 0);
+            },
+            set(value) {
+                // Handle drag and drop in edit mode
+                if (this.editMode) {
+                    this.$root.publicGroupList = value;
+                }
+            }
+        },
+        
+        filteredMonitorCount() {
+            return this.filteredGroupList.reduce((count, group) => {
+                return count + group.monitorList.length;
+            }, 0);
+        },
+        
+        totalMonitorCount() {
+            return this.$root.publicGroupList.reduce((count, group) => {
+                return count + group.monitorList.length;
+            }, 0);
         }
     },
     created() {
-
+        // Store original list for reference
+        this.originalGroupList = [...this.$root.publicGroupList];
     },
     methods: {
+        /**
+         * Check if monitor matches search query
+         * @param {object} monitor Monitor to check
+         * @returns {boolean} True if monitor matches search
+         */
+        matchesSearch(monitor) {
+            if (!this.searchQuery.trim()) {
+                return true;
+            }
+            
+            const query = this.searchQuery.toLowerCase();
+            const name = monitor.name.toLowerCase();
+            const tags = monitor.tags ? monitor.tags.map(tag => tag.name.toLowerCase()) : [];
+            
+            return name.includes(query) || tags.some(tag => tag.includes(query));
+        },
+        
+        /**
+         * Check if monitor matches status filter
+         * @param {object} monitor Monitor to check
+         * @returns {boolean} True if monitor matches status filter
+         */
+        matchesStatusFilter(monitor) {
+            if (this.statusFilter === "all") {
+                return true;
+            }
+            
+            return monitor.status === this.statusFilter;
+        },
+        
+        /**
+         * Filter monitors based on search and status filters
+         */
+        filterMonitors() {
+            // The filtering is handled by the computed property filteredGroupList
+            // This method is called on input/change events for reactivity
+        },
+        
+        /**
+         * Clear all filters
+         */
+        clearFilters() {
+            this.searchQuery = "";
+            this.statusFilter = "all";
+        },
+
         /**
          * Remove the specified group
          * @param {number} index Index of group to remove
@@ -200,6 +333,13 @@ export default {
 
 <style lang="scss" scoped>
 @import "../assets/vars";
+
+.search-filter-bar {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
 
 .extra-info {
     display: flex;
