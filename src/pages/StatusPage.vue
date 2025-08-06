@@ -128,29 +128,8 @@
 
         <!-- Main Status Page -->
         <div :class="{ edit: enableEditMode}" class="main">
-            <!-- Logo & Title -->
-            <h1 class="mb-4 title-flex">
-                <!-- Logo -->
-                <!-- <span class="logo-wrapper" @click="showImageCropUploadMethod">
-                    <img :src="logoURL" alt class="logo me-2" :class="logoClass" />
-                    <font-awesome-icon v-if="enableEditMode" class="icon-upload" icon="upload" />
-                </span> -->
-
-                <!-- Uploader -->
-                <!--    url="/api/status-page/upload-logo" -->
-                <ImageCropUpload
-                    v-model="showImageCropUpload"
-                    field="img"
-                    :width="128"
-                    :height="128"
-                    :langType="$i18n.locale"
-                    img-format="png"
-                    :noCircle="true"
-                    :noSquare="false"
-                    @crop-success="cropSuccess"
-                />
-
-                <!-- Title -->
+            <!-- Title -->
+            <h1 class="mb-4">
                 <Editable v-model="config.title" tag="span" :contenteditable="editMode" :noNL="true" />
             </h1>
 
@@ -234,39 +213,7 @@
                 </div>
             </div>
 
-            <!-- Overall Status -->
-            <div class="shadow-box list  p-4 overall-status mb-4">
-                <div v-if="Object.keys($root.publicMonitorList).length === 0 && loadedData">
-                    <font-awesome-icon icon="question-circle" class="ok" />
-                    {{ $t("No Services") }}
-                </div>
 
-                <template v-else>
-                    <div v-if="allUp">
-                        <font-awesome-icon icon="check-circle" class="ok" />
-                        {{ $t("All Systems Operational") }}
-                    </div>
-
-                    <div v-else-if="partialDown">
-                        <font-awesome-icon icon="exclamation-circle" class="warning" />
-                        {{ $t("Partially Degraded Service") }}
-                    </div>
-
-                    <div v-else-if="allDown">
-                        <font-awesome-icon icon="times-circle" class="danger" />
-                        {{ $t("Degraded Service") }}
-                    </div>
-
-                    <div v-else-if="isMaintenance">
-                        <font-awesome-icon icon="wrench" class="status-maintenance" />
-                        {{ $t("maintenanceStatus-under-maintenance") }}
-                    </div>
-
-                    <div v-else>
-                        <font-awesome-icon icon="question-circle" style="color: #efefef;" />
-                    </div>
-                </template>
-            </div>
 
             <!-- Maintenance -->
             <template v-if="maintenanceList.length > 0">
@@ -369,7 +316,7 @@ import Favico from "favico.js";
 import { highlight, languages } from "prismjs/components/prism-core";
 import "prismjs/components/prism-css";
 import "prismjs/themes/prism-tomorrow.css"; // import syntax highlighting styles
-import ImageCropUpload from "vue-image-crop-upload";
+
 // import Prism Editor
 import { PrismEditor } from "vue-prism-editor";
 import "vue-prism-editor/dist/prismeditor.min.css"; // import the styles somewhere
@@ -379,8 +326,8 @@ import DOMPurify from "dompurify";
 import Confirm from "../components/Confirm.vue";
 import PublicGroupList from "../components/PublicGroupList.vue";
 import MaintenanceTime from "../components/MaintenanceTime.vue";
-import { getResBaseURL } from "../util-frontend";
-import { STATUS_PAGE_ALL_DOWN, STATUS_PAGE_ALL_UP, STATUS_PAGE_MAINTENANCE, STATUS_PAGE_PARTIAL_DOWN, UP, MAINTENANCE } from "../util.ts";
+
+
 import Tag from "../components/Tag.vue";
 import VueMultiselect from "vue-multiselect";
 
@@ -400,7 +347,6 @@ export default {
 
     components: {
         PublicGroupList,
-        ImageCropUpload,
         Confirm,
         PrismEditor,
         MaintenanceTime,
@@ -440,11 +386,10 @@ export default {
             selectedMonitor: null,
             incident: null,
             previousIncident: null,
-            showImageCropUpload: false,
-            imgDataUrl: "/icon.svg",
+
             loadedTheme: false,
             loadedData: false,
-            baseURL: "",
+
             clickedEditButton: false,
             maintenanceList: [],
             lastUpdateTime: dayjs(),
@@ -455,13 +400,7 @@ export default {
     },
     computed: {
 
-        logoURL() {
-            if (this.imgDataUrl.startsWith("data:")) {
-                return this.imgDataUrl;
-            } else {
-                return this.baseURL + this.imgDataUrl;
-            }
-        },
+
 
         /**
          * If the monitor is added to public list, which will not be in this list.
@@ -517,14 +456,7 @@ export default {
             return this.config.published;
         },
 
-        logoClass() {
-            if (this.editMode) {
-                return {
-                    "edit-mode": true,
-                };
-            }
-            return {};
-        },
+
 
         incidentClass() {
             return "bg-" + this.incident.style;
@@ -534,49 +466,9 @@ export default {
             return "bg-maintenance";
         },
 
-        overallStatus() {
 
-            if (Object.keys(this.$root.publicLastHeartbeatList).length === 0) {
-                return -1;
-            }
 
-            let status = STATUS_PAGE_ALL_UP;
-            let hasUp = false;
 
-            for (let id in this.$root.publicLastHeartbeatList) {
-                let beat = this.$root.publicLastHeartbeatList[id];
-
-                if (beat.status === MAINTENANCE) {
-                    return STATUS_PAGE_MAINTENANCE;
-                } else if (beat.status === UP) {
-                    hasUp = true;
-                } else {
-                    status = STATUS_PAGE_PARTIAL_DOWN;
-                }
-            }
-
-            if (! hasUp) {
-                status = STATUS_PAGE_ALL_DOWN;
-            }
-
-            return status;
-        },
-
-        allUp() {
-            return this.overallStatus === STATUS_PAGE_ALL_UP;
-        },
-
-        partialDown() {
-            return this.overallStatus === STATUS_PAGE_PARTIAL_DOWN;
-        },
-
-        allDown() {
-            return this.overallStatus === STATUS_PAGE_ALL_DOWN;
-        },
-
-        isMaintenance() {
-            return this.overallStatus === STATUS_PAGE_MAINTENANCE;
-        },
 
         incidentHTML() {
             if (this.incident.content != null) {
@@ -690,8 +582,7 @@ export default {
             }
         });
 
-        // Special handle for dev
-        this.baseURL = getResBaseURL();
+
     },
     async mounted() {
         this.slug = this.overrideSlug || this.$route.params.slug;
@@ -707,9 +598,7 @@ export default {
                 this.config.domainNameList = [];
             }
 
-            if (this.config.icon) {
-                this.imgDataUrl = this.config.icon;
-            }
+
 
             this.incident = res.data.incident;
             this.maintenanceList = res.data.maintenanceList;
@@ -847,7 +736,7 @@ export default {
             let startTime = new Date();
             this.config.slug = this.config.slug.trim().toLowerCase();
 
-            this.$root.getSocket().emit("saveStatusPage", this.slug, this.config, this.imgDataUrl, this.$root.publicGroupList, (res) => {
+            this.$root.getSocket().emit("saveStatusPage", this.slug, this.config, null, this.$root.publicGroupList, (res) => {
                 if (res.ok) {
                     this.enableEditMode = false;
                     this.$root.publicGroupList = res.publicGroupList;
@@ -937,24 +826,7 @@ export default {
             location.href = "/status/" + this.slug;
         },
 
-        /**
-         * Set URL of new image after successful crop operation
-         * @param {string} imgDataUrl URL of image in data:// format
-         * @returns {void}
-         */
-        cropSuccess(imgDataUrl) {
-            this.imgDataUrl = imgDataUrl;
-        },
 
-        /**
-         * Show image crop dialog if in edit mode
-         * @returns {void}
-         */
-        showImageCropUploadMethod() {
-            if (this.editMode) {
-                this.showImageCropUpload = true;
-            }
-        },
 
         /**
          * Create an incident for this status page
@@ -1067,22 +939,7 @@ export default {
 <style lang="scss" scoped>
 @import "../assets/vars.scss";
 
-.overall-status {
-    font-weight: bold;
-    font-size: 25px;
 
-    .ok {
-        color: $primary;
-    }
-
-    .warning {
-        color: $warning;
-    }
-
-    .danger {
-        color: $danger;
-    }
-}
 
 h1 {
     font-size: 30px;
@@ -1153,41 +1010,9 @@ footer {
     gap: 10px;
 }
 
-.logo-wrapper {
-    display: inline-block;
-    position: relative;
 
-    &:hover {
-        .icon-upload {
-            transform: scale(1.2);
-        }
-    }
 
-    .icon-upload {
-        transition: all $easing-in 0.2s;
-        position: absolute;
-        bottom: 6px;
-        font-size: 20px;
-        left: -14px;
-        background-color: white;
-        padding: 5px;
-        border-radius: 10px;
-        cursor: pointer;
-        box-shadow: 0 15px 70px rgba(0, 0, 0, 0.9);
-    }
-}
 
-.logo {
-    transition: all $easing-in 0.2s;
-
-    &.edit-mode {
-        cursor: pointer;
-
-        &:hover {
-            transform: scale(1.2);
-        }
-    }
-}
 
 .incident {
     .content {
@@ -1224,9 +1049,7 @@ footer {
         font-size: 22px;
     }
 
-    .overall-status {
-        font-size: 20px;
-    }
+
 }
 
 .dark {

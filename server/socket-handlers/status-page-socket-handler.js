@@ -2,7 +2,6 @@ const { R } = require("redbean-node");
 const { checkLogin, setSetting } = require("../util-server");
 const dayjs = require("dayjs");
 const { log } = require("../../src/util");
-const ImageDataURI = require("../image-data-uri");
 const Database = require("../database");
 const apicache = require("../modules/apicache");
 const StatusPage = require("../model/status_page");
@@ -131,25 +130,10 @@ module.exports.statusPageSocketHandler = (socket) => {
 
             checkSlug(config.slug);
 
-            const header = "data:image/png;base64,";
+    
 
-            // Check logo format
-            // If is image data url, convert to png file
-            // Else assume it is a url, nothing to do
-            if (imgDataUrl.startsWith("data:")) {
-                if (! imgDataUrl.startsWith(header)) {
-                    throw new Error("Only allowed PNG logo.");
-                }
-
-                const filename = `logo${statusPage.id}.png`;
-
-                // Convert to file
-                await ImageDataURI.outputFile(imgDataUrl, Database.uploadDir + filename);
-                config.logo = `/upload/${filename}?t=` + Date.now();
-
-            } else {
-                config.logo = imgDataUrl;
-            }
+            // Logo handling removed - no custom logo support in public dashboard
+            config.logo = null;
 
             statusPage.slug = config.slug;
             statusPage.title = config.title;
