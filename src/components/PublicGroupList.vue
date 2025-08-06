@@ -1,44 +1,51 @@
 <template>
     <!-- Search and Filter Bar -->
     <div v-if="!editMode" class="search-filter-bar mb-4">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <span class="input-group-text">
+        <div class="row g-3">
+            <!-- Search Input -->
+            <div class="col-12 col-md-6">
+                <div class="input-group search-input-group">
+                    <span class="input-group-text search-icon">
                         <font-awesome-icon icon="search" />
                     </span>
                     <input 
                         v-model="searchQuery" 
                         type="text" 
-                        class="form-control" 
-                        :placeholder="$t('Search monitors...')"
+                        class="form-control search-input" 
+                        :placeholder="$t('Pesquisar')"
                         @input="filterMonitors"
                     />
                 </div>
             </div>
-            <div class="col-md-3">
-                <select v-model="statusFilter" class="form-select" @change="filterMonitors">
-                    <option value="all">{{ $t("All Status") }}</option>
-                    <option value="up">{{ $t("Up") }}</option>
-                    <option value="down">{{ $t("Down") }}</option>
-                    <option value="maintenance">{{ $t("Maintenance") }}</option>
-                </select>
+            
+            <!-- Status Filter -->
+            <div class="col-12 col-md-3">
+                                 <select v-model="statusFilter" class="form-select status-filter" @change="filterMonitors">
+                     <option value="all">{{ $t("All Status") }}</option>
+                     <option value="1">{{ $t("Up") }}</option>
+                     <option value="0">{{ $t("Down") }}</option>
+                     <option value="3">{{ $t("Maintenance") }}</option>
+                 </select>
             </div>
-            <div class="col-md-3">
+            
+            <!-- Clear Filters Button -->
+            <div class="col-12 col-md-3">
                 <button 
                     v-if="hasActiveFilters" 
-                    class="btn btn-outline-secondary w-100" 
+                    class="btn btn-outline-light clear-filters-btn w-100" 
                     @click="clearFilters"
                 >
-                    <font-awesome-icon icon="times" />
+                    <font-awesome-icon icon="times" class="me-2" />
                     {{ $t("Clear Filters") }}
                 </button>
             </div>
         </div>
         
         <!-- Results counter -->
-        <div v-if="hasActiveFilters" class="mt-2 text-muted small">
-            {{ $t("Showing") }} {{ filteredMonitorCount }} {{ $t("of") }} {{ totalMonitorCount }} {{ $t("monitors") }}
+        <div v-if="hasActiveFilters" class="mt-3 text-light results-counter">
+            <small>
+                {{ $t("Showing") }} <strong>{{ filteredMonitorCount }}</strong> {{ $t("of") }} <strong>{{ totalMonitorCount }}</strong> {{ $t("monitors") }}
+            </small>
         </div>
     </div>
 
@@ -234,18 +241,27 @@ export default {
             return name.includes(query) || tags.some(tag => tag.includes(query));
         },
         
-        /**
-         * Check if monitor matches status filter
-         * @param {object} monitor Monitor to check
-         * @returns {boolean} True if monitor matches status filter
-         */
-        matchesStatusFilter(monitor) {
-            if (this.statusFilter === "all") {
-                return true;
-            }
-            
-            return monitor.status === this.statusFilter;
-        },
+                 /**
+          * Check if monitor matches status filter
+          * @param {object} monitor Monitor to check
+          * @returns {boolean} True if monitor matches status filter
+          */
+         matchesStatusFilter(monitor) {
+             if (this.statusFilter === "all") {
+                 return true;
+             }
+             
+             // Get the actual status from lastHeartbeatList
+             let actualStatus = monitor.status;
+             if (monitor.id in this.$root.publicLastHeartbeatList && this.$root.publicLastHeartbeatList[monitor.id]) {
+                 actualStatus = this.$root.publicLastHeartbeatList[monitor.id].status;
+             }
+             
+             // Convert statusFilter to number for comparison
+             const filterStatus = parseInt(this.statusFilter);
+             
+             return actualStatus === filterStatus;
+         },
         
         /**
          * Filter monitors based on search and status filters
@@ -335,10 +351,267 @@ export default {
 @import "../assets/vars";
 
 .search-filter-bar {
-    background: #f8f9fa;
-    padding: 1rem;
+    background: transparent;
+    padding: 1rem 0;
     border-radius: 0.375rem;
-    border: 1px solid #dee2e6;
+}
+
+.search-input-group {
+    .search-icon {
+        background: var(--search-bg, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--search-border, rgba(255, 255, 255, 0.2));
+        border-right: none;
+        color: var(--search-icon-color, rgba(255, 255, 255, 0.8));
+    }
+    
+    .search-input {
+        background: var(--search-bg, rgba(255, 255, 255, 0.1));
+        border: 1px solid var(--search-border, rgba(255, 255, 255, 0.2));
+        color: var(--search-text-color, white);
+        
+        &::placeholder {
+            color: var(--search-placeholder, rgba(255, 255, 255, 0.6));
+        }
+        
+        &:focus {
+            background: var(--search-focus-bg, rgba(255, 255, 255, 0.15));
+            border-color: var(--search-focus-border, rgba(255, 255, 255, 0.3));
+            box-shadow: 0 0 0 0.2rem var(--search-focus-shadow, rgba(255, 255, 255, 0.1));
+            color: var(--search-text-color, white);
+        }
+    }
+}
+
+.status-filter {
+    background: var(--search-bg, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--search-border, rgba(255, 255, 255, 0.2));
+    color: var(--search-text-color, white);
+    
+    &:focus {
+        background: var(--search-focus-bg, rgba(255, 255, 255, 0.15));
+        border-color: var(--search-focus-border, rgba(255, 255, 255, 0.3));
+        box-shadow: 0 0 0 0.2rem var(--search-focus-shadow, rgba(255, 255, 255, 0.1));
+        color: var(--search-text-color, white);
+    }
+    
+    option {
+        background: var(--option-bg, #2d3748);
+        color: var(--option-text, white);
+    }
+}
+
+.clear-filters-btn {
+    border: 1px solid var(--btn-border, rgba(255, 255, 255, 0.3));
+    color: var(--btn-text, rgba(255, 255, 255, 0.8));
+    background: var(--btn-bg, rgba(255, 255, 255, 0.1));
+    
+    &:hover {
+        background: var(--btn-hover-bg, rgba(255, 255, 255, 0.2));
+        border-color: var(--btn-hover-border, rgba(255, 255, 255, 0.4));
+        color: var(--btn-hover-text, white);
+    }
+}
+
+.results-counter {
+    opacity: 0.8;
+    color: var(--counter-text, white);
+    
+    strong {
+        color: var(--counter-strong, #4ade80);
+    }
+}
+
+/* Dark theme (default) */
+.search-filter-bar {
+    --search-bg: rgba(255, 255, 255, 0.1);
+    --search-border: rgba(255, 255, 255, 0.2);
+    --search-icon-color: rgba(255, 255, 255, 0.8);
+    --search-text-color: white;
+    --search-placeholder: rgba(255, 255, 255, 0.6);
+    --search-focus-bg: rgba(255, 255, 255, 0.15);
+    --search-focus-border: rgba(255, 255, 255, 0.3);
+    --search-focus-shadow: rgba(255, 255, 255, 0.1);
+    --option-bg: #2d3748;
+    --option-text: white;
+    --btn-border: rgba(255, 255, 255, 0.3);
+    --btn-text: rgba(255, 255, 255, 0.8);
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-hover-bg: rgba(255, 255, 255, 0.2);
+    --btn-hover-border: rgba(255, 255, 255, 0.4);
+    --btn-hover-text: white;
+    --counter-text: white;
+    --counter-strong: #4ade80;
+}
+
+/* Light theme - detect system preference */
+@media (prefers-color-scheme: light) {
+    .search-filter-bar {
+        --search-bg: rgba(0, 0, 0, 0.08);
+        --search-border: rgba(0, 0, 0, 0.15);
+        --search-icon-color: rgba(0, 0, 0, 0.7);
+        --search-text-color: #000;
+        --search-placeholder: rgba(0, 0, 0, 0.5);
+        --search-focus-bg: rgba(0, 0, 0, 0.12);
+        --search-focus-border: rgba(0, 0, 0, 0.25);
+        --search-focus-shadow: rgba(0, 0, 0, 0.15);
+        --option-bg: #ffffff;
+        --option-text: #000;
+        --btn-border: rgba(0, 0, 0, 0.15);
+        --btn-text: rgba(0, 0, 0, 0.8);
+        --btn-bg: rgba(0, 0, 0, 0.08);
+        --btn-hover-bg: rgba(0, 0, 0, 0.15);
+        --btn-hover-border: rgba(0, 0, 0, 0.25);
+        --btn-hover-text: #000;
+        --counter-text: #333;
+        --counter-strong: #059669;
+    }
+}
+
+/* Force light theme when Uptime Kuma is in light mode */
+body[data-theme="light"] .search-filter-bar {
+    --search-bg: rgba(0, 0, 0, 0.08);
+    --search-border: rgba(0, 0, 0, 0.15);
+    --search-icon-color: rgba(0, 0, 0, 0.7);
+    --search-text-color: #000;
+    --search-placeholder: rgba(0, 0, 0, 0.5);
+    --search-focus-bg: rgba(0, 0, 0, 0.12);
+    --search-focus-border: rgba(0, 0, 0, 0.25);
+    --search-focus-shadow: rgba(0, 0, 0, 0.15);
+    --option-bg: #ffffff;
+    --option-text: #000;
+    --btn-border: rgba(0, 0, 0, 0.15);
+    --btn-text: rgba(0, 0, 0, 0.8);
+    --btn-bg: rgba(0, 0, 0, 0.08);
+    --btn-hover-bg: rgba(0, 0, 0, 0.15);
+    --btn-hover-border: rgba(0, 0, 0, 0.25);
+    --btn-hover-text: #000;
+    --counter-text: #333;
+    --counter-strong: #059669;
+}
+
+/* Force dark theme when Uptime Kuma is in dark mode */
+body[data-theme="dark"] .search-filter-bar {
+    --search-bg: rgba(255, 255, 255, 0.1);
+    --search-border: rgba(255, 255, 255, 0.2);
+    --search-icon-color: rgba(255, 255, 255, 0.8);
+    --search-text-color: white;
+    --search-placeholder: rgba(255, 255, 255, 0.6);
+    --search-focus-bg: rgba(255, 255, 255, 0.15);
+    --search-focus-border: rgba(255, 255, 255, 0.3);
+    --search-focus-shadow: rgba(255, 255, 255, 0.1);
+    --option-bg: #2d3748;
+    --option-text: white;
+    --btn-border: rgba(255, 255, 255, 0.3);
+    --btn-text: rgba(255, 255, 255, 0.8);
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-hover-bg: rgba(255, 255, 255, 0.2);
+    --btn-hover-border: rgba(255, 255, 255, 0.4);
+    --btn-hover-text: white;
+    --counter-text: white;
+    --counter-strong: #4ade80;
+}
+
+/* Fallback styles for better visibility */
+.search-filter-bar .search-input-group .search-icon {
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #6c757d !important;
+}
+
+.search-filter-bar .search-input-group .search-input {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+}
+
+.search-filter-bar .search-input-group .search-input::placeholder {
+    color: #6c757d !important;
+}
+
+.search-filter-bar .status-filter {
+    background: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+}
+
+.search-filter-bar .status-filter option {
+    background: #ffffff !important;
+    color: #212529 !important;
+}
+
+.search-filter-bar .clear-filters-btn {
+    background: #6c757d !important;
+    border: 1px solid #6c757d !important;
+    color: #ffffff !important;
+}
+
+.search-filter-bar .clear-filters-btn:hover {
+    background: #5a6268 !important;
+    border-color: #545b62 !important;
+    color: #ffffff !important;
+}
+
+.search-filter-bar .results-counter {
+    color: #6c757d !important;
+}
+
+.search-filter-bar .results-counter strong {
+    color: #28a745 !important;
+}
+
+/* Dark theme overrides */
+body[data-theme="dark"] .search-filter-bar .search-input-group .search-icon,
+body[data-theme="dark"] .search-filter-bar .search-input-group .search-input,
+body[data-theme="dark"] .search-filter-bar .status-filter {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .search-input-group .search-input::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .status-filter option {
+    background: #2d3748 !important;
+    color: white !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .clear-filters-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .clear-filters-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .results-counter {
+    color: white !important;
+}
+
+body[data-theme="dark"] .search-filter-bar .results-counter strong {
+    color: #4ade80 !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .search-filter-bar {
+        padding: 0.75rem 0;
+    }
+    
+    .search-input-group,
+    .status-filter,
+    .clear-filters-btn {
+        margin-bottom: 0.5rem;
+    }
+    
+    .results-counter {
+        text-align: center;
+    }
 }
 
 .extra-info {

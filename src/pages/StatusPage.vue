@@ -131,10 +131,10 @@
             <!-- Logo & Title -->
             <h1 class="mb-4 title-flex">
                 <!-- Logo -->
-                <span class="logo-wrapper" @click="showImageCropUploadMethod">
+                <!-- <span class="logo-wrapper" @click="showImageCropUploadMethod">
                     <img :src="logoURL" alt class="logo me-2" :class="logoClass" />
                     <font-awesome-icon v-if="enableEditMode" class="icon-upload" icon="upload" />
-                </span>
+                </span> -->
 
                 <!-- Uploader -->
                 <!--    url="/api/status-page/upload-logo" -->
