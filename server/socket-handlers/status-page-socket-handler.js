@@ -138,7 +138,8 @@ module.exports.statusPageSocketHandler = (socket) => {
             statusPage.slug = config.slug;
             statusPage.title = config.title;
             statusPage.description = config.description;
-            statusPage.icon = config.logo;
+            // garantir que icon nunca seja NULL
+            statusPage.icon = config.logo || "";
             statusPage.autoRefreshInterval = config.autoRefreshInterval,
             statusPage.theme = config.theme;
             //statusPage.published = ;
