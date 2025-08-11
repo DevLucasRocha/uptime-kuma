@@ -23,7 +23,7 @@
             </div>
         </div>
         <div
-            v-if="!$root.isMobile && size !== 'small' && beatList.length > 4 && $root.styleElapsedTime !== 'none'"
+            v-if="(($root && !$root.isMobile) || showTimeOnMobile) && size !== 'small' && beatList.length > 4 && $root.styleElapsedTime !== 'none'"
             class="d-flex justify-content-between align-items-center word" :style="timeStyle"
         >
             <div>{{ timeSinceFirstBeat }}</div>
@@ -71,6 +71,11 @@ export default {
         heartbeatBarDays: {
             type: Number,
             default: 0
+        },
+        /** Force show elapsed time row on mobile (for public status page) */
+        showTimeOnMobile: {
+            type: Boolean,
+            default: false,
         }
     },
     data() {
@@ -511,6 +516,7 @@ export default {
 .word {
     color: $secondary-text;
     font-size: 12px;
+    line-height: 1.2;
 }
 
 .connecting-line {
@@ -523,6 +529,13 @@ export default {
 
     .dark & {
         background-color: #333;
+    }
+}
+
+@media (max-width: 768px) {
+    .word {
+        font-size: 11px;
+        gap: 6px;
     }
 }
 </style>

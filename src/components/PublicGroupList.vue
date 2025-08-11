@@ -83,7 +83,7 @@
                         <template #item="monitor">
                             <div class="item" data-testid="monitor">
                                 <div class="row">
-                                    <div class="col-6 small-padding">
+                                    <div class="col-12 col-md-6 small-padding">
                                         <div class="info">
                                             <font-awesome-icon v-if="editMode" icon="arrows-alt-v" class="action drag me-3" />
                                             <font-awesome-icon v-if="editMode" icon="times" class="action remove me-3" @click="removeMonitor(group.index, monitor.index)" />
@@ -122,8 +122,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div :key="$root.userHeartbeatBar" class="col-6">
-                                        <HeartbeatBar size="mid" :monitor-id="monitor.element.id" />
+                                    <div :key="$root.userHeartbeatBar" class="col-12 col-md-6">
+                                        <HeartbeatBar size="mid" :monitor-id="monitor.element.id" :show-time-on-mobile="true" />
                                     </div>
                                 </div>
                             </div>
@@ -349,6 +349,12 @@ export default {
 
 <style lang="scss" scoped>
 @import "../assets/vars";
+
+/* Permitir quebra de linha no container de info da página pública */
+.info {
+    white-space: normal !important;
+    overflow: visible;
+}
 
 .search-filter-bar {
     background: transparent;
@@ -639,6 +645,26 @@ body[data-theme="dark"] .search-filter-bar .results-counter strong {
     padding-right: 5px;
     margin: 0;
     display: inline-block;
+    white-space: normal; /* permitir quebra de linha no público */
+    word-break: break-word;
+}
+
+/* Ajustes de responsividade: forçar stack no mobile */
+@media (max-width: 768px) {
+    .item .row {
+        display: flex;
+        flex-direction: column;
+    }
+    .item .col-6.small-padding {
+        width: 100% !important;
+    }
+    .item .col-6 {
+        width: 100% !important;
+        margin-top: 8px;
+    }
+    .info {
+        white-space: normal !important; /* sobrescreve nowrap global apenas aqui */
+    }
 }
 
 .btn-link {
