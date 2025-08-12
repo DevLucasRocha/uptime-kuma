@@ -294,7 +294,7 @@ let needSetup = false;
     // With Basic Auth using the first user's username/password
     app.get("/metrics", apiAuth, prometheusAPIMetrics());
 
-    app.use("/", expressStaticGzip("dist", {
+    app.use("/", expressStaticGzip(path.join(__dirname, "../dist"), {
         enableBrotli: true,
     }));
 

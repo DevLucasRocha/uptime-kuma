@@ -22,7 +22,7 @@ class Database {
      * Bootstrap database for SQLite
      * @type {string}
      */
-    static templatePath = "./db/kuma.db";
+    static templatePath = path.join(process.cwd(), "db/kuma.db");
 
     /**
      * Data Dir (Default: ./data)
@@ -125,7 +125,7 @@ class Database {
 
     static dbConfig = {};
 
-    static knexMigrationsPath = "./db/knex_migrations";
+    static knexMigrationsPath = path.join(process.cwd(), "db/knex_migrations");
 
     /**
      * Initialize the data directory
@@ -134,7 +134,7 @@ class Database {
      */
     static initDataDir(args) {
         // Data Directory (must be end with "/")
-        Database.dataDir = process.env.DATA_DIR || args["data-dir"] || "./data/";
+        Database.dataDir = process.env.DATA_DIR || args["data-dir"] || path.join(process.cwd(), "data/");
 
         Database.sqlitePath = path.join(Database.dataDir, "kuma.db");
         if (! fs.existsSync(Database.dataDir)) {
@@ -335,7 +335,7 @@ class Database {
         R.freeze(true);
 
         if (autoloadModels) {
-            await R.autoloadModels("./server/model");
+            await R.autoloadModels(path.join(process.cwd(), "server/model"));
         }
 
         if (dbConfig.type === "sqlite") {
